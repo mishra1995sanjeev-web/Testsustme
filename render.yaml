@@ -1,0 +1,14 @@
+services:
+  - type: worker
+    name: ultra-worker
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python main.py
+    envVars:
+      - key: TARGET_URL
+        value: https://geetainternationalschool.in
+      - key: BATCH_SIZE
+        value: "100"
+      - key: PYTHONUNBUFFERED
+        value: "1"
+        
