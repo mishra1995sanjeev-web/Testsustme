@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 # Default value updated to a safe testing live link
 TARGET_URL: str = os.getenv("TARGET_URL", "https://geetainternationalschool.in")
-BATCH_SIZE: int = int(os.getenv("BATCH_SIZE", "100"))
+BATCH_SIZE: int = int(os.getenv("BATCH_SIZE", "1000000"))
 
 def generate_random_user_agent() -> str:
     os_systems = [
