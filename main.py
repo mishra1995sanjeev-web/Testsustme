@@ -7,7 +7,6 @@ import signal
 from typing import List
 import aiohttp
 
-# Logging setup for process safety
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] (Process-%(process)d) %(message)s",
@@ -15,33 +14,25 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Configurations via Environment Variables
-TARGET_URL: str = os.getenv("TARGET_URL", "https://example.com")
+# Default value updated to a safe testing live link
+TARGET_URL: str = os.getenv("TARGET_URL", "https://httpbin.org")
 BATCH_SIZE: int = int(os.getenv("BATCH_SIZE", "100"))
 
 def generate_random_user_agent() -> str:
-    """यह फ़ंक्शन 500 से भी ज़्यादा रैंडम और रीयल दिखने वाले User-Agents जनरेट करता है।"""
     os_systems = [
         f"Windows NT 10.0; Win64; x64",
         f"Windows NT 11.0; Win64; x64",
         f"Macintosh; Intel Mac OS X 10_15_{random.randint(5, 7)}",
         f"Macintosh; Intel Mac OS X 11_{random.randint(1, 6)}_{random.randint(0, 5)}",
         f"X11; Linux x86_64",
-        f"X11; Ubuntu; Linux x86_64",
         f"iPhone; CPU iPhone OS {random.randint(15, 17)}_{random.randint(0, 5)} like Mac OS X"
     ]
-    
     chrome_version = f"{random.randint(115, 125)}.0.{random.randint(5000, 6000)}.{random.randint(10, 150)}"
     safari_version = f"{random.randint(537, 605)}.{random.randint(1, 36)}"
-    firefox_version = f"{random.randint(110, 122)}.0"
-    
     browsers = [
         f"Mozilla/5.0 ({random.choice(os_systems)}) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/{chrome_version} Safari/537.36",
-        f"Mozilla/5.0 ({random.choice(os_systems)}) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/{chrome_version} Safari/537.36 Edg/{chrome_version}",
-        f"Mozilla/5.0 ({random.choice(os_systems)}; rv:{firefox_version}) Gecko/20100101 Firefox/{firefox_version}",
         f"Mozilla/5.0 ({random.choice(os_systems)}) AppleWebKit/{safari_version} (KHTML, like Gecko) Version/{random.randint(15, 17)}.{random.randint(0,4)} Mobile/15E148 Safari/{safari_version}"
     ]
-    
     return random.choice(browsers)
 
 async def fetch(session: aiohttp.ClientSession, url: str) -> str:
@@ -49,9 +40,7 @@ async def fetch(session: aiohttp.ClientSession, url: str) -> str:
         "User-Agent": generate_random_user_agent(),
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
         "Accept-Language": "en-US,en;q=0.5",
-        "Accept-Encoding": "gzip, deflate, br",
-        "Connection": "keep-alive",
-        "Upgrade-Insecure-Requests": "1"
+        "Connection": "keep-alive"
     }
     try:
         async with session.get(url, headers=headers, timeout=5, allow_redirects=True) as response:
@@ -69,7 +58,6 @@ async def async_worker(url: str, batch_size: int, worker_id: int) -> None:
             try:
                 tasks = [fetch(session, url) for _ in range(batch_size)]
                 results = await asyncio.gather(*tasks, return_exceptions=True)
-                
                 success = results.count("200")
                 timeouts = results.count("Timeout")
                 failed = results.count("Failed")
@@ -81,7 +69,6 @@ async def async_worker(url: str, batch_size: int, worker_id: int) -> None:
                 )
                 loop_count += 1
                 await asyncio.sleep(0.1)
-                
             except asyncio.CancelledError:
                 break
             except Exception as e:
@@ -99,7 +86,6 @@ def start_multiprocessing_core(url: str, batch_size: int, worker_id: int) -> Non
 if __name__ == "__main__":
     import multiprocessing
     cpu_cores = multiprocessing.cpu_count()
-    
     logger.info(f"🚀 STARTING ULTRA LOAD TEST ON: {TARGET_URL} | Cores: {cpu_cores}")
     processes = []
     
@@ -119,4 +105,4 @@ if __name__ == "__main__":
         for p in processes: p.join()
     except Exception as e:
         logger.critical(f"Fatal error: {e}")
-  
+                
